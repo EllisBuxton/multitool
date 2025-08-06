@@ -1,103 +1,138 @@
-import Image from "next/image";
+'use client';
+
+import { useState, useRef } from 'react';
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [isDragOver, setIsDragOver] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    
+    const files = Array.from(e.dataTransfer.files);
+    console.log('Dropped files:', files);
+    // Handle the dropped files here
+  };
+
+  const handleClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    console.log('Selected files:', files);
+    // Handle the selected files here
+  };
+
+  return (
+    <div className="min-h-screen bg-zinc-900 text-zinc-100 flex flex-col items-center justify-center p-8">
+      {/* Title */}
+      <div className="text-center mb-12">
+        <h1 className="text-4xl md:text-6xl font-bold tracking-wider mb-4">
+          <span className="text-zinc-100">File</span>{" "}
+          <span className="text-purple-400">Converter</span>
+        </h1>
+        <p className="text-zinc-400 text-lg font-light">
+          Drop your files to get started
+        </p>
+      </div>
+
+      {/* Drag and Drop Area */}
+      <div className="w-full max-w-2xl">
+        <div 
+          className={`relative border-2 border-dashed rounded-2xl p-16 text-center transition-all duration-300 cursor-pointer group ${
+            isDragOver 
+              ? 'border-purple-400 bg-purple-500/10 scale-[1.02]' 
+              : 'border-zinc-700 hover:border-purple-500'
+          }`}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          onClick={handleClick}
+        >
+          {/* Background gradient */}
+          <div className={`absolute inset-0 bg-gradient-to-br rounded-2xl transition-opacity duration-300 ${
+            isDragOver 
+              ? 'from-purple-500/20 to-purple-600/10 opacity-100' 
+              : 'from-purple-500/5 to-transparent opacity-0 group-hover:opacity-100'
+          }`}></div>
+          
+          {/* Hidden file input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            className="hidden"
+            onChange={handleFileSelect}
+            accept="*/*"
+          />
+          
+          {/* Content */}
+          <div className="relative z-10">
+            {/* Upload Icon */}
+            <div className={`mx-auto mb-6 w-16 h-16 rounded-full flex items-center justify-center transition-all duration-300 ${
+              isDragOver 
+                ? 'bg-purple-600 scale-110' 
+                : 'bg-zinc-800 group-hover:bg-zinc-700'
+            }`}>
+              <svg 
+                className={`w-8 h-8 transition-all duration-300 ${
+                  isDragOver 
+                    ? 'text-white scale-110' 
+                    : 'text-zinc-400 group-hover:text-purple-400'
+                }`}
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  strokeWidth={1.5} 
+                  d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" 
+                />
+              </svg>
+            </div>
+            
+            {/* Text */}
+            <h3 className={`text-xl font-medium mb-2 transition-colors duration-300 ${
+              isDragOver ? 'text-purple-200' : 'text-zinc-200'
+            }`}>
+              {isDragOver ? 'Drop files now!' : 'Drop files here'}
+            </h3>
+            <p className={`mb-4 transition-colors duration-300 ${
+              isDragOver ? 'text-purple-300' : 'text-zinc-500'
+            }`}>
+              or click to browse
+            </p>
+            
+            {/* Supported formats */}
+            <div className={`text-xs transition-colors duration-300 ${
+              isDragOver ? 'text-purple-400' : 'text-zinc-600'
+            }`}>
+              Supports images, documents, videos, and more
+            </div>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      </div>
+
+      {/* Subtle footer */}
+      <div className="mt-16 text-center">
+        <p className="text-zinc-600 text-sm font-light">
+          Secure • Fast • Free
+        </p>
+      </div>
     </div>
   );
 }
