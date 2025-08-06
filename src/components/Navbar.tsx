@@ -10,12 +10,12 @@ export default function Navbar() {
         {/* Left side - Logo and Title */}
         <div className="flex items-center space-x-3">
           {/* Placeholder logo */}
-          <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center">
+          <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-red-600 to-red-700 flex items-center justify-center">
             <span className="text-white font-bold text-sm">MT</span>
           </div>
           <span className="text-xl font-bold text-zinc-100 tracking-wide">
             <span className="text-zinc-100">Multi</span>
-            <span className="text-purple-400">Tool</span>
+            <span className="text-red-500">Tool</span>
           </span>
         </div>
 

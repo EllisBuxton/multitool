@@ -8,7 +8,7 @@ export default function Home() {
       <div className="text-center mb-12 max-w-4xl">
         <h1 className="text-5xl md:text-7xl font-bold tracking-wider mb-6">
           <span className="text-zinc-100">Multi</span>
-          <span className="text-purple-400">Tool</span>
+          <span className="text-red-500">Tool</span>
         </h1>
         <p className="text-zinc-400 text-xl md:text-2xl font-light mb-8 max-w-2xl mx-auto">
           Quick and Useful Tools and Utilities
@@ -19,13 +19,13 @@ export default function Home() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl w-full mb-16">
         {/* File Converter Card */}
         <Link href="/file-converter">
-          <div className="group cursor-pointer bg-zinc-800/50 border border-zinc-700 rounded-2xl p-8 hover:border-purple-500 hover:bg-zinc-800/80 transition-all duration-300 hover:scale-[1.02]">
-            <div className="h-12 w-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+          <div className="group cursor-pointer bg-zinc-800/50 border border-zinc-700 rounded-2xl p-8 hover:border-red-500 hover:bg-zinc-800/80 transition-all duration-300 hover:scale-[1.02]">
+            <div className="h-12 w-12 bg-gradient-to-br from-red-600 to-red-700 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
               <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
               </svg>
             </div>
-            <h3 className="text-xl font-semibold text-zinc-100 mb-2 group-hover:text-purple-300 transition-colors">
+            <h3 className="text-xl font-semibold text-zinc-100 mb-2 group-hover:text-red-300 transition-colors">
               File Converter
             </h3>
             <p className="text-zinc-400 group-hover:text-zinc-300 transition-colors">
@@ -67,7 +67,7 @@ export default function Home() {
       {/* CTA Section */}
       <div className="text-center">
         <Link href="/file-converter">
-          <Button size="lg" className="bg-purple-600 hover:bg-purple-700 text-white font-medium px-8 py-3 text-lg">
+          <Button size="lg" className="bg-red-600 hover:bg-red-700 text-white font-medium px-8 py-3 text-lg">
             Get Started
           </Button>
         </Link>
