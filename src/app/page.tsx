@@ -1,137 +1,76 @@
-'use client';
-
-import { useState, useRef } from 'react';
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 export default function Home() {
-  const [isDragOver, setIsDragOver] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragOver(true);
-  };
-
-  const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragOver(false);
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragOver(false);
-    
-    const files = Array.from(e.dataTransfer.files);
-    console.log('Dropped files:', files);
-    // Handle the dropped files here
-  };
-
-  const handleClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    console.log('Selected files:', files);
-    // Handle the selected files here
-  };
-
   return (
     <div className="min-h-screen bg-zinc-900 text-zinc-100 flex flex-col items-center justify-center p-8">
-      {/* Title */}
-      <div className="text-center mb-12">
-        <h1 className="text-4xl md:text-6xl font-bold tracking-wider mb-4">
-          <span className="text-zinc-100">File</span>{" "}
-          <span className="text-purple-400">Converter</span>
+      {/* Hero Section */}
+      <div className="text-center mb-12 max-w-4xl">
+        <h1 className="text-5xl md:text-7xl font-bold tracking-wider mb-6">
+          <span className="text-zinc-100">Multi</span>
+          <span className="text-purple-400">Tool</span>
         </h1>
-        <p className="text-zinc-400 text-lg font-light">
-          Drop your files to get started
+        <p className="text-zinc-400 text-xl md:text-2xl font-light mb-8 max-w-2xl mx-auto">
+          Quick and Useful Tools and Utilities
         </p>
       </div>
 
-      {/* Drag and Drop Area */}
-      <div className="w-full max-w-2xl">
-        <div 
-          className={`relative border-2 border-dashed rounded-2xl p-16 text-center transition-all duration-300 cursor-pointer group ${
-            isDragOver 
-              ? 'border-purple-400 bg-purple-500/10 scale-[1.02]' 
-              : 'border-zinc-700 hover:border-purple-500'
-          }`}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
-          onClick={handleClick}
-        >
-          {/* Background gradient */}
-          <div className={`absolute inset-0 bg-gradient-to-br rounded-2xl transition-opacity duration-300 ${
-            isDragOver 
-              ? 'from-purple-500/20 to-purple-600/10 opacity-100' 
-              : 'from-purple-500/5 to-transparent opacity-0 group-hover:opacity-100'
-          }`}></div>
-          
-          {/* Hidden file input */}
-          <input
-            ref={fileInputRef}
-            type="file"
-            multiple
-            className="hidden"
-            onChange={handleFileSelect}
-            accept="*/*"
-          />
-          
-          {/* Content */}
-          <div className="relative z-10">
-            {/* Upload Icon */}
-            <div className={`mx-auto mb-6 w-16 h-16 rounded-full flex items-center justify-center transition-all duration-300 ${
-              isDragOver 
-                ? 'bg-purple-600 scale-110' 
-                : 'bg-zinc-800 group-hover:bg-zinc-700'
-            }`}>
-              <svg 
-                className={`w-8 h-8 transition-all duration-300 ${
-                  isDragOver 
-                    ? 'text-white scale-110' 
-                    : 'text-zinc-400 group-hover:text-purple-400'
-                }`}
-                fill="none" 
-                stroke="currentColor" 
-                viewBox="0 0 24 24"
-              >
-                <path 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  strokeWidth={1.5} 
-                  d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" 
-                />
+      {/* Tools Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl w-full mb-16">
+        {/* File Converter Card */}
+        <Link href="/file-converter">
+          <div className="group cursor-pointer bg-zinc-800/50 border border-zinc-700 rounded-2xl p-8 hover:border-purple-500 hover:bg-zinc-800/80 transition-all duration-300 hover:scale-[1.02]">
+            <div className="h-12 w-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
               </svg>
             </div>
-            
-            {/* Text */}
-            <h3 className={`text-xl font-medium mb-2 transition-colors duration-300 ${
-              isDragOver ? 'text-purple-200' : 'text-zinc-200'
-            }`}>
-              {isDragOver ? 'Drop files now!' : 'Drop files here'}
+            <h3 className="text-xl font-semibold text-zinc-100 mb-2 group-hover:text-purple-300 transition-colors">
+              File Converter
             </h3>
-            <p className={`mb-4 transition-colors duration-300 ${
-              isDragOver ? 'text-purple-300' : 'text-zinc-500'
-            }`}>
-              or click to browse
+            <p className="text-zinc-400 group-hover:text-zinc-300 transition-colors">
+              Convert files between different formats quickly and easily
             </p>
-            
-            {/* Supported formats */}
-            <div className={`text-xs transition-colors duration-300 ${
-              isDragOver ? 'text-purple-400' : 'text-zinc-600'
-            }`}>
-              Supports images, documents, videos, and more
-            </div>
           </div>
+        </Link>
+
+        {/* Coming Soon Cards */}
+        <div className="bg-zinc-800/30 border border-zinc-800 rounded-2xl p-8 opacity-60">
+          <div className="h-12 w-12 bg-zinc-700 rounded-lg flex items-center justify-center mb-4">
+            <svg className="w-6 h-6 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+          </div>
+          <h3 className="text-xl font-semibold text-zinc-400 mb-2">
+            Coming Soon
+          </h3>
+          <p className="text-zinc-600">
+            More tools are being developed
+          </p>
+        </div>
+
+        <div className="bg-zinc-800/30 border border-zinc-800 rounded-2xl p-8 opacity-60">
+          <div className="h-12 w-12 bg-zinc-700 rounded-lg flex items-center justify-center mb-4">
+            <svg className="w-6 h-6 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+          </div>
+          <h3 className="text-xl font-semibold text-zinc-400 mb-2">
+            Coming Soon
+          </h3>
+          <p className="text-zinc-600">
+            More tools are being developed
+          </p>
         </div>
       </div>
 
-      {/* Subtle footer */}
-      <div className="mt-16 text-center">
-        <p className="text-zinc-600 text-sm font-light">
-          Secure • Fast • Free
-        </p>
+      {/* CTA Section */}
+      <div className="text-center">
+        <Link href="/file-converter">
+          <Button size="lg" className="bg-purple-600 hover:bg-purple-700 text-white font-medium px-8 py-3 text-lg">
+            Get Started
+          </Button>
+        </Link>
       </div>
     </div>
   );
