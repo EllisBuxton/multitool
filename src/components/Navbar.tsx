@@ -37,6 +37,14 @@ export default function Navbar() {
               File Converter
             </Button>
           </Link>
+          <Link href="/video-downloader">
+            <Button 
+              variant="ghost" 
+              className="font-medium text-zinc-300 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
+            >
+              Video/Audio Downloader
+            </Button>
+          </Link>
         </div>
 
         {/* Right side - Keep empty for balance */}
