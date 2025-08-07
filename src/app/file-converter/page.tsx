@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { convertFile, isFFmpegSupported } from '@/lib/ffmpeg';
 
 interface UploadedFile {
   file: File;
@@ -9,12 +10,20 @@ interface UploadedFile {
   converting: boolean;
   converted: boolean;
   downloadUrl?: string;
+  error?: string;
+  progress?: number;
 }
 
 export default function FileConverter() {
   const [isDragOver, setIsDragOver] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+  const [isFFmpegReady, setIsFFmpegReady] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    // Check if FFmpeg is supported in this environment
+    setIsFFmpegReady(isFFmpegSupported());
+  }, []);
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -30,16 +39,16 @@ export default function FileConverter() {
     const type = fileType.toLowerCase();
     
     if (type.startsWith('image/')) {
-      return ['jpg', 'png', 'webp', 'gif', 'bmp', 'tiff', 'svg'];
+      return ['jpg', 'png', 'webp', 'gif', 'bmp'];
     } else if (type.startsWith('video/')) {
-      return ['mp4', 'avi', 'mov', 'wmv', 'flv', 'webm', 'mkv'];
+      return ['mp4', 'webm', 'avi', 'mov', 'gif'];
     } else if (type.startsWith('audio/')) {
-      return ['mp3', 'wav', 'flac', 'aac', 'ogg', 'wma'];
+      return ['mp3', 'wav', 'flac', 'aac', 'ogg'];
     } else if (type.includes('pdf') || type.includes('document') || type.includes('text')) {
-      return ['pdf', 'docx', 'txt', 'rtf', 'html', 'md'];
+      return ['txt', 'html', 'md', 'rtf'];
     }
     
-    return ['txt', 'pdf', 'html'];
+    return ['txt'];
   };
 
   const processFiles = (files: File[]) => {
@@ -81,29 +90,52 @@ export default function FileConverter() {
     setUploadedFiles(prev => prev.filter(f => f.id !== fileId));
   };
 
-  const convertFile = async (fileId: string) => {
+  const convertFileHandler = async (fileId: string) => {
+    const uploadedFile = uploadedFiles.find(f => f.id === fileId);
+    if (!uploadedFile) return;
+
     setUploadedFiles(prev => 
-      prev.map(f => f.id === fileId ? { ...f, converting: true } : f)
+      prev.map(f => f.id === fileId ? { ...f, converting: true, error: undefined, progress: 0 } : f)
     );
-    
-    // Simulate conversion process
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    setUploadedFiles(prev => 
-      prev.map(f => f.id === fileId ? { 
-        ...f, 
-        converting: false, 
-        converted: true,
-        downloadUrl: URL.createObjectURL(f.file) // Placeholder
-      } : f)
-    );
+
+    try {
+      const convertedBlob = await convertFile(
+        uploadedFile.file, 
+        uploadedFile.targetFormat,
+        (progress) => {
+          setUploadedFiles(prev => 
+            prev.map(f => f.id === fileId ? { ...f, progress } : f)
+          );
+        }
+      );
+
+      const downloadUrl = URL.createObjectURL(convertedBlob);
+      
+      setUploadedFiles(prev => 
+        prev.map(f => f.id === fileId ? { 
+          ...f, 
+          converting: false, 
+          converted: true,
+          downloadUrl,
+          progress: 100
+        } : f)
+      );
+    } catch (error) {
+      setUploadedFiles(prev => 
+        prev.map(f => f.id === fileId ? { 
+          ...f, 
+          converting: false, 
+          error: error instanceof Error ? error.message : 'Conversion failed'
+        } : f)
+      );
+    }
   };
 
   const convertAllFiles = async () => {
-    const filesToConvert = uploadedFiles.filter(f => !f.converted && !f.converting);
+    const filesToConvert = uploadedFiles.filter(f => !f.converted && !f.converting && !f.error);
     
     for (const file of filesToConvert) {
-      await convertFile(file.id);
+      await convertFileHandler(file.id);
     }
   };
 
@@ -126,6 +158,13 @@ export default function FileConverter() {
         <p className="text-zinc-400 text-lg font-light">
           {uploadedFiles.length === 0 ? 'Drop your files to get started' : `${uploadedFiles.length} file${uploadedFiles.length !== 1 ? 's' : ''} ready for conversion`}
         </p>
+        {!isFFmpegReady && (
+          <div className="mt-4 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+            <p className="text-yellow-400 text-sm">
+              ⚠️ FFmpeg not supported in this environment. Some conversions may not work.
+            </p>
+          </div>
+        )}
       </div>
 
       <div className="max-w-4xl mx-auto">
@@ -208,6 +247,141 @@ export default function FileConverter() {
         </div>
         </div>
 
+        {/* Supported Conversions Info */}
+        {uploadedFiles.length === 0 && (
+          <div className="mt-8 mb-8 bg-zinc-800/30 border border-zinc-700/50 rounded-xl p-6">
+            <h3 className="text-lg font-semibold text-zinc-200 mb-4 flex items-center">
+              <svg className="w-5 h-5 mr-2 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Supported Conversions
+            </h3>
+            
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Video Conversions */}
+              <div className="bg-zinc-800/50 rounded-lg p-4">
+                <div className="flex items-center mb-3">
+                  <svg className="w-5 h-5 mr-2 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                  <h4 className="font-medium text-blue-400">Video</h4>
+                </div>
+                <div className="space-y-2 text-sm">
+                  <div>
+                    <span className="text-zinc-400">From:</span>
+                    <span className="text-zinc-200 ml-1">MP4, AVI, MOV, MKV, WebM, etc.</span>
+                  </div>
+                  <div>
+                    <span className="text-zinc-400">To:</span>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {['MP4', 'WebM', 'AVI', 'MOV', 'GIF'].map(format => (
+                        <span key={format} className="px-2 py-1 bg-blue-500/20 text-blue-300 rounded text-xs">
+                          {format}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Audio Conversions */}
+              <div className="bg-zinc-800/50 rounded-lg p-4">
+                <div className="flex items-center mb-3">
+                  <svg className="w-5 h-5 mr-2 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                  </svg>
+                  <h4 className="font-medium text-green-400">Audio</h4>
+                </div>
+                <div className="space-y-2 text-sm">
+                  <div>
+                    <span className="text-zinc-400">From:</span>
+                    <span className="text-zinc-200 ml-1">MP3, WAV, FLAC, AAC, OGG, etc.</span>
+                  </div>
+                  <div>
+                    <span className="text-zinc-400">To:</span>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {['MP3', 'WAV', 'FLAC', 'AAC', 'OGG'].map(format => (
+                        <span key={format} className="px-2 py-1 bg-green-500/20 text-green-300 rounded text-xs">
+                          {format}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Image Conversions */}
+              <div className="bg-zinc-800/50 rounded-lg p-4">
+                <div className="flex items-center mb-3">
+                  <svg className="w-5 h-5 mr-2 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <h4 className="font-medium text-purple-400">Image</h4>
+                </div>
+                <div className="space-y-2 text-sm">
+                  <div>
+                    <span className="text-zinc-400">From:</span>
+                    <span className="text-zinc-200 ml-1">JPG, PNG, WebP, GIF, BMP, etc.</span>
+                  </div>
+                  <div>
+                    <span className="text-zinc-400">To:</span>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {['JPG', 'PNG', 'WebP', 'GIF', 'BMP'].map(format => (
+                        <span key={format} className="px-2 py-1 bg-purple-500/20 text-purple-300 rounded text-xs">
+                          {format}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Document Conversions */}
+              <div className="bg-zinc-800/50 rounded-lg p-4">
+                <div className="flex items-center mb-3">
+                  <svg className="w-5 h-5 mr-2 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <h4 className="font-medium text-yellow-400">Document</h4>
+                </div>
+                <div className="space-y-2 text-sm">
+                  <div>
+                    <span className="text-zinc-400">From:</span>
+                    <span className="text-zinc-200 ml-1">TXT, PDF, DOC, RTF, etc.</span>
+                  </div>
+                  <div>
+                    <span className="text-zinc-400">To:</span>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {['TXT', 'HTML', 'MD', 'RTF'].map(format => (
+                        <span key={format} className="px-2 py-1 bg-yellow-500/20 text-yellow-300 rounded text-xs">
+                          {format}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Additional Info */}
+            <div className="mt-6 p-4 bg-zinc-900/50 rounded-lg border border-zinc-700/30">
+              <div className="flex items-start space-x-3">
+                <svg className="w-5 h-5 text-red-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div className="text-sm">
+                  <p className="text-zinc-300 font-medium mb-1">How it works:</p>
+                  <ul className="text-zinc-400 space-y-1">
+                    <li>• All conversions happen locally in your browser using FFmpeg.wasm</li>
+                    <li>• High-quality output with optimized settings for each format</li>
+                    <li>• Supports batch processing and real-time progress tracking</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Uploaded Files List */}
         {uploadedFiles.length > 0 && (
           <div className="space-y-4">
@@ -282,7 +456,34 @@ export default function FileConverter() {
                       {uploadedFile.converting && (
                         <div className="flex items-center space-x-2">
                           <div className="w-5 h-5 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></div>
-                          <span className="text-sm text-zinc-400">Converting...</span>
+                          <div className="flex flex-col">
+                            <span className="text-sm text-zinc-400">Converting...</span>
+                            {uploadedFile.progress !== undefined && (
+                              <div className="flex items-center space-x-2 mt-1">
+                                <div className="w-16 h-1 bg-zinc-700 rounded-full overflow-hidden">
+                                  <div 
+                                    className="h-full bg-red-500 transition-all duration-300"
+                                    style={{ width: `${uploadedFile.progress}%` }}
+                                  />
+                                </div>
+                                <span className="text-xs text-zinc-500">{uploadedFile.progress}%</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {uploadedFile.error && (
+                        <div className="flex items-center space-x-2">
+                          <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <div className="flex flex-col">
+                            <span className="text-sm text-red-500">Failed</span>
+                            <span className="text-xs text-red-400 max-w-32 truncate" title={uploadedFile.error}>
+                              {uploadedFile.error}
+                            </span>
+                          </div>
                         </div>
                       )}
                       
@@ -304,12 +505,23 @@ export default function FileConverter() {
                         </div>
                       )}
                       
-                      {!uploadedFile.converting && !uploadedFile.converted && (
+                      {!uploadedFile.converting && !uploadedFile.converted && !uploadedFile.error && (
                         <button
-                          onClick={() => convertFile(uploadedFile.id)}
-                          className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm rounded-lg font-medium transition-colors duration-200"
+                          onClick={() => convertFileHandler(uploadedFile.id)}
+                          disabled={!isFFmpegReady}
+                          className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-zinc-600 disabled:cursor-not-allowed text-white text-sm rounded-lg font-medium transition-colors duration-200"
                         >
                           Convert
+                        </button>
+                      )}
+
+                      {uploadedFile.error && (
+                        <button
+                          onClick={() => convertFileHandler(uploadedFile.id)}
+                          disabled={!isFFmpegReady}
+                          className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-zinc-600 disabled:cursor-not-allowed text-white text-sm rounded-lg font-medium transition-colors duration-200"
+                        >
+                          Retry
                         </button>
                       )}
                     </div>
